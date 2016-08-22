@@ -1,0 +1,11 @@
+string chain
+
+float64[] initial_thetas
+float64[] eff_pose_reference
+
+float64 gain 
+float64 damp
+---
+float64[] thetas
+
+

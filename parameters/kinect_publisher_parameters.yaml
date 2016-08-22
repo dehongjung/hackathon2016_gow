@@ -1,0 +1,24 @@
+# Parameters for kinect_joint_tracker_and_publisher.py
+
+# Base reference frame
+fixed_frame: 'openni_depth_frame'
+
+# Kinect frames
+kinect_skeleton_frames: [
+    head,
+    neck,
+    torso,
+    left_shoulder,
+    left_elbow,
+    left_hand,
+    left_hip,
+    left_knee,
+    left_foot,
+    right_shoulder,
+    right_elbow,
+    right_hand,
+    right_hip,
+    right_knee,
+    right_foot
+    ]
+

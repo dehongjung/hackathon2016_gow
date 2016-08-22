@@ -1,0 +1,12 @@
+<launch>
+  <env name="PYTHONPATH"  value="$(env PYTHONPATH)"/>
+  <env name="LD_LIBRARY_PATH" value="$(env LD_LIBRARY_PATH):$(env NAOQIPATH)/lib:$(find tg_nao_teleoperation)/libs"/>
+
+  <arg name="fixed_frame" default="openni_depth_frame" />
+  
+  <node pkg="tg_nao_teleoperation" name="kinect_to_nao_publisher" type="kinect_to_nao_publisher_inv.py" output="screen">
+  <rosparam file="$(find tg_nao_teleoperation)/parameters/kinect_publisher_parameters.yaml" command="load" />
+  <param name="fixed_frame" value="$(arg fixed_frame)" />
+  </node>
+
+</launch>

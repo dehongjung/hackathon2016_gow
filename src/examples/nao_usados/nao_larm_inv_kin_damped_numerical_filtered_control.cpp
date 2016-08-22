@@ -1,0 +1,134 @@
+/**
+Trying to implement NAO Control Examples Using HInfinityRobustController.h
+Based on Schunk Control Examples Using HInfinityRobustController.h
+
+Start to implement with one arm only
+
+\author 
+\since 05/2014
+
+*/
+// Transform into a ROS node
+#include "ros/ros.h"
+#include "tg_nao_teleoperation/getAnglesDQ.h" //The server file
+
+#include "../DQ.h"
+#include "../DQ_kinematics.h"
+#include "../controllers/TranslationFirstPoseController.h" //Has HInfinityRobustController(...,...)
+#include "../controllers/DampedNumericalFilteredController.h"
+#include "../robot_dh/NAO.h" //Has NaoKinematics()
+
+#include <cmath> //For fabs and M_PI_2
+
+
+using namespace Eigen;
+using namespace DQ_robotics;
+using namespace std;
+
+
+// This function returns all the thetas to move the left nao arm
+bool DQ_invKin(tg_nao_teleoperation::getAnglesDQ::Request  &req,
+               tg_nao_teleoperation::getAnglesDQ::Response &res )
+{
+    // Data from NAO
+    string chain = req.chain;
+    Matrix<double,6,1> eff_pose_current_nao(req.eff_pose_current.data());
+    Matrix<double,5,1> initial_thetas_nao(req.initial_thetas.data());
+    Matrix<double,6,1> eff_pose_reference_nao(req.eff_pose_reference.data());
+    
+    const double pi2 = M_PI_2;
+
+//    std::cout << std::endl <<"End Effector Pose Reference" << std::endl << eff_pose_reference_nao << std::endl;
+
+    //Gain Matrix
+	Matrix<double,8,1> B;
+    B << 1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0;
+
+    //Initial Joint Values
+    Matrix<double,5,1> thetas;
+    thetas << initial_thetas_nao;
+    
+    //Gain Matrix
+	Matrix<double,4,4> kp = Matrix<double,4,4>::Zero(4,4);
+	Matrix<double,4,1> kp_diagonal(4,1);
+    kp_diagonal << 1.5,1.5,1.5,1.5;
+    kp.diagonal() = kp_diagonal;
+
+	Matrix<double,4,4> kr = Matrix<double,4,4>::Zero(4,4);
+	Matrix<double,4,1> kr_diagonal(4,1);
+	kr_diagonal << 0.2,0.2,0.2,0.2;
+	kr.diagonal() = kr_diagonal;    
+
+    //Robot DH
+    DQ_kinematics nao_larm = NaoKinematics();
+    
+    if (chain == "LArm")
+        {
+        eff_pose_reference_nao[0] = eff_pose_reference_nao[0] - 0.05775;
+        eff_pose_reference_nao[1] = eff_pose_reference_nao[1] - 0.098;
+        eff_pose_reference_nao[2] = eff_pose_reference_nao[2] - 0.1 + 0.01;
+        }
+    else if (chain == "RArm")
+        {
+        eff_pose_reference_nao[0] = eff_pose_reference_nao[0] - 0.05775;
+        eff_pose_reference_nao[1] = eff_pose_reference_nao[1] + 0.098;
+        eff_pose_reference_nao[2] = eff_pose_reference_nao[2] - 0.1 + 0.01;        
+        }
+    // Taking into account translation only
+    DQ eff_pose_reference(1,0,0,0,0,eff_pose_reference_nao[0]/2,eff_pose_reference_nao[1]/2,eff_pose_reference_nao[2]/2);
+    std::cout << std::endl <<"End Effector Pose Reference" << std::endl << eff_pose_reference << std::endl;
+    // verify if eff_pose_reference ~ eff_pose_reference_nao
+
+    //TranslationFirstPoseController pf_controller(nao_larm, kp, kr, 0.3, 0.1);
+    DampedNumericalFilteredController c_controller(nao_larm, kp, 0.01, 0.01, 0.01);
+    //control(kp, thetas, schunk,eff_pose_reference, c_controller);
+
+    //Control Loop Variables
+    DQ eff_pose_current(0);
+	DQ eff_pose_older = nao_larm.fkm(thetas);
+    DQ eff_pose_difference(0); 
+
+	DQ eff_translation_difference(20); //Big initial values
+	DQ eff_rotation_difference(20);    //so they don't break the loop.
+
+    double translation_threshold = 0.001;
+
+    //Control Loop
+	//The control loop end criterion is changed in this example. This criterion is used 
+	//to search for local convergence. Both sensibilities can be changed using the given thresholds.
+	eff_pose_current = nao_larm.fkm(thetas);
+	eff_translation_difference = vec4( eff_pose_current.translation() - eff_pose_reference.translation());
+	std::cout << std::endl <<"Error" << std::endl << eff_translation_difference.vec4().norm() << std::endl;
+    if( (eff_translation_difference.vec4().norm() > translation_threshold) )
+    {   
+
+        //One controller step
+        thetas = c_controller.getNewJointPositions(eff_pose_reference, thetas);
+
+        //End of control check
+        eff_pose_current = nao_larm.fkm(thetas);
+
+		// Get translation differenceS
+		eff_translation_difference = vec4(eff_pose_current.translation() - eff_pose_reference.translation());
+    }
+        
+    double aux[] = {thetas(0, 0), thetas(1, 0), thetas(2, 0), thetas(3, 0), thetas(4, 0)};
+    res.thetas.assign(aux, aux+5);
+    return true;
+}
+
+int main(int argc, char **argv)
+{
+    ros::init(argc, argv, "nao_dual_quaternions");
+    ros::NodeHandle n;
+    ROS_INFO("nao dual quaternions is running...");
+    
+    //ros::ServiceServer service = n.advertiseService("find_angles_using_dq", DQ_invKin);
+    ros::ServiceServer service = n.advertiseService("find_angles_using_dq", DQ_invKin);
+    ROS_INFO("Ready to calculate new angles for NAO");
+    ros::spin();
+    
+    return 0;
+}
+
+

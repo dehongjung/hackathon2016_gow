@@ -1,0 +1,19 @@
+# Parameters for the nao_subscriber.py
+
+# NAO IP at home
+naoqi_ip_home: '192.168.2.117'
+
+# NAO IP LPCI
+naoqi_ip_lpci: '169.254.14.64'
+
+# NAO IP Meeting Room Lara
+# naoqi_ip_lara: '169.254.80.21'
+
+#NAO IP LARA my desk
+nao_ip_lara_mah: '169.254.14.64'
+
+# NAO Port
+naoqi_port: 9559
+
+# Initial Support Polygon
+polygon_support: 'none'

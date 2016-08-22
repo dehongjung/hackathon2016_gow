@@ -1,0 +1,58 @@
+/**
+NAO Robot DH Parameters - left arm
+
+\
+\since 05/2014
+*/
+
+#ifndef DQ_ROBOTICS_NAO_DH_H
+#define DQ_ROBOTICS_NAO_DH_H
+
+#include"../DQ_kinematics.h"
+#include<Eigen/Dense>
+#include<cmath>
+
+#define UPPER_ARM_LENGTH 0.105
+#define LOWER_ARM_LENGTH 0.05595
+#define THIGH_LENGTH = 0.10000;
+#define TIBIA_LENGTH = 0.10290;
+
+
+using namespace Eigen;
+
+namespace DQ_robotics{
+
+    DQ_kinematics NaoKinematics_Arm()
+    {
+      const double pi2 = M_PI_2;
+	    Matrix<double,4,5> nao_arm_dh(4,5);
+	    nao_arm_dh << 0,    pi2, 0,                0,    0,
+                       0,    0,   UPPER_ARM_LENGTH, 0,    LOWER_ARM_LENGTH,
+                       0,    0,   0,                0,    0,
+                       -pi2, pi2, pi2,              -pi2, pi2;
+                       
+	    DQ_kinematics nao_larm(nao_arm_dh,"modified");
+
+      return nao_larm;        
+    };
+    
+    DQ_kinematics NaoKinematics_Leg()
+    {
+      const double pi = M_PI;
+      const double pi2 = M_PI_2;
+      const double pi4 = M_PI_4;
+      
+	    Matrix<double,4,6> nao_leg_dh(4,6);
+	    nao_leg_dh <<  -pi2,  pi4,   0,              0,              0,    0,
+                           0,    0,   0,              0,              0,    0,
+                           0,    0,   0,  -0.10000,   0.10290,    0,
+                      -3*pi4, -pi2, pi2,              0,              0, -pi2;
+                      
+	    DQ_kinematics nao_leg(nao_leg_dh,"modified");
+	  return nao_leg;
+    };
+
+}
+
+
+#endif
