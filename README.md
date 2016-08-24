@@ -13,6 +13,8 @@ This project requires the following items:
 
 3.  Kinect Sensor
 
+4.  Android Smartphone
+
 ## Code
 This work was implemented mostly in Python and C++ in the ROS enviroment using Ubuntu 14.04.
 
