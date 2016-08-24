@@ -6,8 +6,11 @@ The project GOW is a Teleoperation system between a Human (wearing a VR gear in 
 
 ## Requirements
 This project requires the following items:
+
 1.  Nao Robot
+
 2.  VR Gear
+
 3.  Kinect Sensor
 
 ## Code
